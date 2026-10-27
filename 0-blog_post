@@ -1,0 +1,264 @@
+# What Happens When You Type https://www.google.com and Press Enter?
+
+Have you ever wondered what happens behind the scenes when you type a URL into your browser and press Enter? Within seconds, your browser communicates with multiple systems across the internet to retrieve and display a web page.
+
+This process involves several important technologies, including DNS, TCP/IP, firewalls, HTTPS, load balancers, web servers, application servers, and databases.
+
+Understanding how these components work together is essential for every software engineer because it explains how web applications communicate, process requests, and deliver responses to users.
+
+Let's explore the journey step by step.
+
+## 1. The Browser Processes the URL
+
+When I type `https://www.google.com` into my browser and press Enter, the browser first parses the URL.
+
+The URL contains three main parts:
+
+- **Protocol:** `https` — specifies secure communication using HTTP over TLS.
+- **Domain name:** `www.google.com` — identifies the website I want to access.
+- **Path:** `/` — represents the root resource of the website.
+
+Before sending a network request, the browser may check its cache, existing connections, and other stored information. If it cannot reuse an existing connection or cached response, it needs to discover the server's network address.
+
+This leads to the first major step: DNS resolution.
+
+## 2. DNS Request: Finding the Server's IP Address
+
+Computers communicate across networks using IP addresses, but people generally prefer domain names because they are easier to remember.
+
+The Domain Name System (DNS) translates a domain name, such as `www.google.com`, into an IP address that the browser can use to establish a network connection.
+
+The process typically works as follows:
+
+1. The browser checks its DNS cache.
+2. The operating system may check its own DNS cache and local configuration.
+3. If the address is not already available, a request is sent to a configured DNS resolver.
+4. If necessary, the resolver queries other DNS servers, following the DNS hierarchy.
+5. The resolver returns the appropriate DNS record, such as an A record for IPv4 or an AAAA record for IPv6.
+
+The returned address allows the browser to identify a destination for its network connection.
+
+DNS responses may contain multiple addresses, and large services such as Google can use distributed infrastructure to direct traffic efficiently. DNS does not necessarily return one permanent IP address for every user.
+
+## 3. TCP/IP: Establishing Network Communication
+
+Once the browser has an IP address, it needs to communicate with the destination server.
+
+The TCP/IP protocol suite provides the foundation for communication over the internet.
+
+In the traditional HTTPS-over-TCP connection, the browser establishes a TCP connection with the destination, normally using port 443.
+
+TCP uses a three-way handshake:
+
+1. **SYN:** The client requests a connection.
+2. **SYN-ACK:** The server acknowledges the request and responds.
+3. **ACK:** The client acknowledges the response, completing the handshake.
+
+After this process, TCP provides a reliable, ordered byte stream between the endpoints.
+
+IP is responsible for addressing and routing packets across networks. TCP provides transport-level reliability, including retransmission of lost data when necessary.
+
+Together, these protocols allow the browser and server to exchange data across the internet.
+
+There is an important exception: HTTP/3 uses QUIC over UDP rather than TCP. QUIC provides reliable transport and integrates the TLS handshake into its connection establishment process. Therefore, not every HTTPS connection uses the traditional TCP handshake.
+
+## 4. Firewall: Filtering Network Traffic
+
+As packets travel through the network, they may pass through multiple security controls, including network firewalls and cloud-based filtering systems.
+
+A firewall monitors network traffic and applies rules to determine which connections are allowed or blocked.
+
+For example, a firewall might:
+
+- Allow HTTPS traffic on port 443.
+- Block unauthorized inbound connections.
+- Restrict access to internal services.
+- Filter traffic based on IP addresses, ports, protocols, or other security rules.
+
+For a large service such as Google, security may involve multiple layers of protection, including network filtering, traffic inspection, and application-level controls.
+
+If a connection is blocked by a relevant firewall rule, the request may never reach the intended service. If it is permitted, the connection can continue toward the destination infrastructure.
+
+Firewalls do not necessarily appear at just one point in the journey; security controls can operate at different layers of the network and application architecture.
+
+## 5. HTTPS/TLS: Securing the Connection
+
+Before sending ordinary HTTP application data over a traditional HTTPS connection, the browser and server establish a secure channel using TLS (Transport Layer Security).
+
+Although people often refer to this process as an SSL handshake, modern HTTPS primarily uses TLS. SSL is an older protocol that should no longer be used.
+
+During a typical TLS handshake:
+
+1. The browser and server negotiate supported TLS parameters and cryptographic algorithms.
+2. The server presents its digital certificate.
+3. The browser validates the certificate chain, checks the requested hostname, and verifies that the certificate is valid and trusted.
+4. The parties establish shared cryptographic keys.
+5. The connection is ready to exchange encrypted application data.
+
+TLS provides three important security properties:
+
+- **Confidentiality:** Encryption helps prevent unauthorized parties from reading the transmitted data.
+- **Integrity:** Cryptographic protection helps detect unauthorized modification of data.
+- **Authentication:** Certificate validation helps the browser verify the server's identity.
+
+After the secure connection is established, the browser can send an HTTP request, such as a request for the Google homepage.
+
+TLS does not guarantee that a website is trustworthy in every respect, nor does it protect against every possible attack. It secures communication between the relevant endpoints.
+
+## 6. Load Balancer: Distributing Incoming Requests
+
+Large websites receive enormous numbers of requests from users around the world. Sending every request to one server would create a bottleneck and make the service difficult to scale.
+
+A load balancer helps distribute incoming traffic across available servers or service instances.
+
+Depending on the architecture, load balancing can occur at different levels, including DNS-based traffic distribution, network-level load balancing, or application-level proxies.
+
+A load balancer may:
+
+- Distribute requests across healthy backend instances.
+- Monitor server health and avoid unhealthy destinations.
+- Help prevent individual servers from becoming overloaded.
+- Support scaling by adding or removing backend capacity.
+- Route traffic according to configured rules.
+
+For example, imagine an application running on four backend instances. Instead of directing all requests to one instance, a load balancer can distribute traffic among the available instances.
+
+This improves scalability and can increase availability, although the result depends on the overall design and redundancy of the system.
+
+Google operates a sophisticated global infrastructure, so its actual traffic-routing architecture is much more complex than a single load balancer followed by a few servers. The load-balancer model is a useful way to understand the general concept.
+
+## 7. Web Server: Receiving the HTTP Request
+
+Once the request reaches the appropriate serving infrastructure, a web server or an equivalent HTTP-serving component handles the HTTP communication.
+
+A web server commonly accepts HTTP requests and returns HTTP responses. Depending on the architecture, it may also serve static files, apply routing rules, terminate TLS, or forward requests to backend services.
+
+For example, if I request a static image, the web server may be able to return it directly without invoking application logic.
+
+For a dynamic request, the web-serving layer may forward the request to an application service for further processing.
+
+A typical HTTP request contains information such as:
+
+- The HTTP method, such as `GET`.
+- The requested path, such as `/`.
+- Headers, including accepted content types and cookies where applicable.
+- An optional request body, depending on the method and operation.
+
+The server eventually returns an HTTP response containing a status code, response headers, and possibly a response body.
+
+For example, `200 OK` generally indicates that the request succeeded. Other status codes communicate redirects, client errors, or server errors.
+
+## 8. Application Server: Processing the Request
+
+A web server is not the same thing as application logic, although the two roles can be combined in some architectures.
+
+An application server or backend service executes the code responsible for handling the request and producing the appropriate result.
+
+Consider an online shopping application. When a user requests a product page, the backend might:
+
+1. Validate the request and identify the requested product.
+2. Check the user's session or permissions when necessary.
+3. Retrieve product information from a database or cache.
+4. Apply business rules.
+5. Build a response for the client.
+
+Application services can be implemented using technologies such as ASP.NET Core, Node.js, Java with Spring Boot, or Python with Django and FastAPI.
+
+For a Google search, the processing is substantially more sophisticated than this shopping example. Google's systems must interpret the query, retrieve relevant information from large distributed indexes, rank results, and prepare a response.
+
+It is also important to understand that a large service does not necessarily have one separate application server for every request. Processing may be distributed across multiple internal services, and some requests may bypass certain layers entirely.
+
+## 9. Database: Retrieving the Required Data
+
+Many web applications rely on databases to store and retrieve persistent information.
+
+A database might contain user accounts, product details, orders, configuration settings, or other application data.
+
+When an application needs information, it can execute a database query or call another data-access service. The database processes the query and returns the relevant results to the application.
+
+For example, a shopping application might execute a query conceptually similar to:
+
+`SELECT name, price FROM Products WHERE id = 42;`
+
+The application can then use the returned information to construct an HTTP response.
+
+Modern applications often use caches, search indexes, replicas, and distributed storage systems to improve performance and availability.
+
+**Google-specific note:** Google's search infrastructure is not simply a web server connected to one conventional relational database. Search involves distributed crawling, indexing, storage, and ranking systems. A query may be served using specialized indexes and distributed services rather than a direct SQL query against a single database.
+
+The database step is therefore an important part of the general web architecture, but it should not be interpreted as a claim that every Google homepage request follows exactly the same database workflow.
+
+## 10. The Response Returns to the Browser
+
+After the request has been processed, the serving infrastructure generates an HTTP response and sends it back to the browser.
+
+The response travels through the relevant network infrastructure to the client. When TCP is used, TCP handles reliable, ordered delivery of the byte stream. TLS protects the HTTP data in transit.
+
+The browser then processes the response.
+
+If the response contains HTML, the browser parses it and constructs the Document Object Model (DOM). It also processes CSS to determine the page's appearance and executes JavaScript when required.
+
+The browser may request additional resources, including stylesheets, images, fonts, and scripts. These resources can require their own network requests, although caching and connection reuse can reduce the amount of work.
+
+Finally, the browser performs layout, paints the page, and composites the relevant visual layers to display the result on the screen.
+
+This is why loading a modern website can involve many requests rather than just one.
+
+## The Complete Journey at a Glance
+
+The following diagram summarizes a simplified HTTPS-over-TCP request flow.
+
+```text
+User enters https://www.google.com
+                  |
+                  v
+          Browser URL parsing
+                  |
+                  v
+          DNS resolution
+       Domain name -> IP address
+                  |
+                  v
+          TCP connection
+                  |
+                  v
+             TLS handshake
+                  |
+                  v
+        Firewall / security checks
+                  |
+                  v
+        Traffic routing / load balancing
+                  |
+                  v
+             Web server
+                  |
+                  v
+          Application services
+                  |
+                  v
+        Database / search indexes
+                  |
+                  v
+       HTTP response to the browser
+                  |
+                  v
+      HTML, CSS, and JavaScript processing
+                  |
+                  v
+          Page displayed to the user
+```
+
+This diagram is conceptual. In real systems, security checks and traffic routing can occur at several points, and application services may interact with databases, caches, and other services multiple times. Some stages may also be combined or bypassed.
+
+## Conclusion
+
+Typing `https://www.google.com` into a browser and pressing Enter triggers a complex sequence of events that combines networking, security, distributed systems, backend processing, and browser rendering.
+
+DNS helps the browser discover an IP address. TCP/IP or QUIC provides network communication. Firewalls enforce security policies, and TLS protects HTTPS traffic. Traffic-routing infrastructure directs requests toward available services, while web-serving components and application services handle the request and produce a response. Databases, search indexes, and caches may provide the information needed to fulfill it.
+
+Finally, the browser processes the response and renders the page.
+
+Understanding this process gives software engineers a stronger foundation for troubleshooting network problems, designing scalable applications, improving performance, and building secure web services.
+
+The next time you press Enter after typing a URL, remember that a seemingly simple action can involve an entire distributed system working together in milliseconds.
